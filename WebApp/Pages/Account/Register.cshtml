@@ -1,0 +1,57 @@
+﻿@page
+@model WebApp.Pages.Account.RegisterModel
+@{
+}
+
+<p>
+    <h3>User Registration</h3>
+</p>
+<div class="container border" style="padding:20px">
+    <form method="post">
+        <div class="text-danger" asp-validation-summary="All"></div>
+        <div class="form-group row">
+            <div class="col-2">
+                <label asp-for="RegisterViewModel.Email"></label>
+            </div>
+            <div class="col">
+                <input type="text" asp-for="RegisterViewModel.Email" class="form-control" />
+            </div>
+            <span class="text-danger" asp-validation-for="RegisterViewModel.Email"></span>
+        </div>
+        <div class="form-group row">
+            <div class="col-2">
+                <label asp-for="RegisterViewModel.Password"></label>
+            </div>
+            <div class="col">
+                <input type="password" asp-for="RegisterViewModel.Password" class="form-control" />
+            </div>
+            <span class="text-danger" asp-validation-for="RegisterViewModel.Password"></span>
+        </div>
+        <div class="form-group row">
+            <div class="col-2">
+                <label asp-for="RegisterViewModel.Department"></label>
+            </div>
+            <div class="col">
+                <input type="text" asp-for="RegisterViewModel.Department" class="form-control" />
+            </div>
+            <span class="text-danger" asp-validation-for="RegisterViewModel.Department"></span>
+        </div>
+        <div class="form-group row">
+            <div class="col-2">
+                <label asp-for="RegisterViewModel.Position"></label>
+            </div>
+            <div class="col">
+                <input type="text" asp-for="RegisterViewModel.Position" class="form-control" />
+            </div>
+            <span class="text-danger" asp-validation-for="RegisterViewModel.Position"></span>
+        </div>
+        <div class="form-group row">
+            <div class="col-2">
+                <input type="submit" class="btn btn-primary" value="Register" />
+            </div>
+            <div class="col">
+
+            </div>
+        </div>
+    </form>
+</div>

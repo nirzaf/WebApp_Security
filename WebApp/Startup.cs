@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -9,9 +10,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WebApp_UnderTheHood.Authorization;
+using WebApp.Data;
+using WebApp.Data.Account;
+using WebApp.Services;
+using WebApp.Settings;
 
-namespace WebApp_UnderTheHood
+namespace WebApp
 {
     public class Startup
     {
@@ -24,45 +28,39 @@ namespace WebApp_UnderTheHood
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
+        
         {
-            services.AddAuthentication("MyCookieAuth").AddCookie("MyCookieAuth", options =>
+            services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.Cookie.Name = "MyCookieAuth";
+                options.UseSqlServer(Configuration.GetConnectionString("Default"));
+            });
+
+            services.AddIdentity<User, IdentityRole>(options =>
+            {
+                options.Password.RequiredLength = 8;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = true;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();        
+
+            services.ConfigureApplicationCookie(options =>
+            {
                 options.LoginPath = "/Account/Login";
                 options.AccessDeniedPath = "/Account/AccessDenied";
-                options.ExpireTimeSpan = TimeSpan.FromSeconds(300);
             });
 
-            services.AddAuthorization(options => {
+            services.Configure<SmtpSetting>(Configuration.GetSection("SMTP"));
 
-                options.AddPolicy("AdminOnly",
-                    policy => policy.RequireClaim("Admin"));
-
-                options.AddPolicy("MustBelongToHRDepartment",
-                    policy => policy.RequireClaim("Department", "HR"));
-
-                options.AddPolicy("HRManagerOnly", policy => policy
-                    .RequireClaim("Department", "HR")
-                    .RequireClaim("Manager")
-                    .Requirements.Add(new HRManagerProbationRequirement(3)));
-
-            });
-
-            services.AddSingleton<IAuthorizationHandler, HRManagerProbationRequirementHandler>();
+            services.AddSingleton<IEmailService, EmailService>();
 
             services.AddRazorPages();
-
-            services.AddHttpClient("OurWebAPI", client =>
-            {
-                client.BaseAddress = new Uri("https://localhost:44336/");
-            });
-
-            services.AddSession(options =>
-            {
-                options.Cookie.HttpOnly = true;
-                options.IdleTimeout = TimeSpan.FromHours(8);
-                options.Cookie.IsEssential = true;
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -86,8 +84,6 @@ namespace WebApp_UnderTheHood
 
             app.UseAuthentication();
             app.UseAuthorization();
-
-            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {
